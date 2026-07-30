@@ -1,0 +1,43 @@
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+local REManager = require(replicatedStorage.Utils.RemotEventManager)
+local REPrompt = REManager.GlobalChannel.PromptAction
+
+local InfoService 
+
+local GoalSystem = require(script.GoalSystem)
+local ShadowInteraction = require(script.ShadowInteraction)
+
+local ServiceInteractionWorld = {}
+
+local function CenterAction(Id: number, Type:number, player:Player, Parent:BasePart)
+	if #InfoService < 1 then return end
+	
+	if Type == 1 then
+		
+		GoalSystem.VerifyGoal(InfoService, Id, Parent)
+
+	elseif InfoService[1] then
+		ShadowInteraction(InfoService[1], Id, player, Parent)
+
+	end
+end
+
+function ServiceInteractionWorld.Interaction(Id: number, Type:number, Parent:BasePart, player:Player)
+	CenterAction(Id, Type, player, Parent)
+end
+
+function ServiceInteractionWorld.Start(infoGoal: {})
+	if not infoGoal then warn("Não mandou as info") end
+	
+	InfoService = infoGoal
+	
+	REPrompt.listen(function(data:{Id: number, TypeAction: number}, player:Player)
+	CenterAction(data.Id, data.TypeAction, player)
+	end)
+	
+	GoalSystem.Start(InfoService)
+end
+
+return table.freeze(ServiceInteractionWorld)
+		
