@@ -1,0 +1,42 @@
+local tagService = game:GetService("CollectionService")
+
+local infoGoal = require(game:GetService("ReplicatedStorage").Utils.InfoGame)("WorldInteraction")
+local WorldInteractionService = require(script.WorldInteractionService)
+
+local CenterFunction = require(script.CenterFunction)
+
+local CreateWorldInteraction = {}
+
+function CreateWorldInteraction.Start()
+	if not infoGoal then return end
+
+	for categoriaIndex, grupoInteracoes in infoGoal do
+		for chaveObjeto, configInteracao in grupoInteracoes do
+
+			if chaveObjeto == "Name" or not configInteracao.Parent then 
+				continue 
+			end
+			
+			local Parents = tagService:GetTagged(configInteracao.Parent)
+			if #Parents < 1 then continue end
+
+			for partIndex, parteAlvo in Parents do
+				if parteAlvo:IsA("BasePart") then
+					CenterFunction(parteAlvo, configInteracao, categoriaIndex, WorldInteractionService)
+				end
+			end
+
+		end
+	end
+
+	
+	WorldInteractionService.Start(infoGoal)
+
+	infoGoal = nil
+end
+
+function CreateWorldInteraction.Create(parteAlvo: BasePart, infoInteraction: {[string]: any}, categoriaIndex: number)
+	CenterFunction(parteAlvo, infoInteraction, categoriaIndex, WorldInteractionService)
+end
+
+return table.freeze(CreateWorldInteraction)
