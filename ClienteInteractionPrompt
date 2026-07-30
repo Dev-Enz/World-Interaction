@@ -1,0 +1,66 @@
+local PromptService = game:GetService("ProximityPromptService")
+PromptService.MaxPromptsVisible = 1
+
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+local UtilsClient = replicatedStorage:WaitForChild("Utils")
+local REManager = require(UtilsClient.RemotEventManager)
+local REPrompt = REManager.GlobalChannel.PromptAction
+
+local highLight = Instance.new("Highlight")
+highLight.Parent = script
+highLight.Enabled = true
+highLight.FillTransparency = 1
+highLight.OutlineTransparency = 0
+highLight.OutlineColor = Color3.fromRGB(255, 255, 255)
+highLight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+local centerUI = require(script.UICenterInteraction)
+
+local function FireServer(Prompt:ProximityPrompt)
+	local IdWorldInteraction = Prompt:GetAttribute("IdWorldInteraction")
+	local Visuality = Prompt:GetAttribute("Visuality")
+	
+	if not IdWorldInteraction then return end
+	
+	REPrompt.send({Id = IdWorldInteraction, TypeAction = Visuality})
+	
+	if Visuality == 1 then 
+		highLight.Parent = script
+		Prompt:Destroy()
+	end
+end
+
+return function ()
+	PromptService.PromptTriggered:Connect(function(Prompt:ProximityPrompt)
+	
+		if Prompt:GetAttribute("OnlyUI") then
+		
+			centerUI(Prompt.Parent)
+		elseif Prompt:GetAttribute("Minigame") then
+		
+		centerUI(Prompt.Parent)
+			
+			FireServer(Prompt)
+		end
+	end)
+	
+	PromptService.PromptShown:Connect(function(prompt:ProximityPrompt)
+		if prompt.Style == Enum.ProximityPromptStyle.Default then
+			highLight.Parent = prompt.Parent
+			
+		else
+			
+			FireServer(prompt)
+		end
+	end)
+	
+	PromptService.PromptHidden:Connect(function(Prompt:ProximityPrompt)
+		highLight.Parent = script
+		
+		if Prompt:GetAttribute("OnlyUI") or Prompt:GetAttribute("Minigame") then
+
+			centerUI(Prompt.Parent)
+		end
+	end)
+end
