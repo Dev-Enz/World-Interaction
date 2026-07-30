@@ -1,0 +1,91 @@
+--!strict
+local TagService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local TypeWorld = require(ReplicatedStorage.Types.WorldInteraction)
+local REManager = require(ReplicatedStorage.Utils.RemotEventManager)
+local REGoal = REManager.GlobalChannel.GoalUI
+
+local TakeSizeSection = require(script.TakeSizeSection)
+
+type ObjectRegistry = TypeWorld.ObjectsRegistry
+
+local CurrentGoal = 1
+local CurrentSection = 2
+local TotalSizeSection: number
+local PromptsForComplete: number 
+local CurrentPromptComplete = 0
+
+local SystemGoal = {}
+
+local function ConfigNextGoal(Info: ObjectRegistry)
+	local SectionInfo = Info[CurrentSection]
+	local GoalInfo = SectionInfo and SectionInfo[CurrentGoal]
+
+	if not GoalInfo then return end
+
+	TotalSizeSection = TakeSizeSection(SectionInfo)
+	PromptsForComplete = #TagService:GetTagged(GoalInfo.Parent) or 1
+
+	REGoal.sendToAll({IndexGoal = CurrentGoal, IndexType = CurrentSection, Update = 0})
+	
+	if GoalInfo.StartFunction then
+		task.wait(5)
+		GoalInfo.StartFunction()
+	end
+end
+
+function SystemGoal.Start(Info: ObjectRegistry)
+	CurrentGoal = 1
+	CurrentSection = 2
+	
+	ConfigNextGoal(Info)
+end
+
+function SystemGoal.VerifyGoal(Info: ObjectRegistry, Id: number, Parent:BasePart)
+	local SectionInfo = Info[CurrentSection]
+	local GoalInfo = SectionInfo and SectionInfo[CurrentGoal]
+print(Info, Id, Parent, GoalInfo)
+	if GoalInfo.IdWorldInteraction ~= Id then return end
+
+
+	CurrentPromptComplete += 1
+print(CurrentPromptComplete, PromptsForComplete)
+	if CurrentPromptComplete >= PromptsForComplete then
+		print("complete goal")
+		if GoalInfo.EndFunction then
+			GoalInfo.EndFunction(Parent, GoalInfo.Parent)
+		end
+
+		CurrentPromptComplete = 0
+
+		if CurrentGoal < TotalSizeSection then
+			Info[CurrentSection][CurrentGoal] = nil
+			CurrentGoal += 1
+		else
+			Info[CurrentSection] = nil
+			CurrentGoal = 1
+			CurrentSection += 1
+		end
+
+		ConfigNextGoal(Info)
+		
+	else 
+		print("middle")
+		if GoalInfo.MiddleFunction then
+		GoalInfo.MiddleFunction()
+end
+		
+		REGoal.sendToAll({IndexGoal = CurrentGoal, IndexType = CurrentSection, Update = 1})
+	end
+	
+	if Parent then
+		print("destroying object")
+	local InteractionOBJ = Parent:FindFirstChildWhichIsA("ProximityPrompt") or Parent:FindFirstChildWhichIsA("ClickDetector")
+	if InteractionOBJ then
+		InteractionOBJ:Destroy()
+	end
+	end
+end
+
+return table.freeze(SystemGoal)
