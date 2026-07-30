@@ -1,0 +1,9 @@
+return function (Info: {}, Id:number, player:Player, Parent:BasePart)
+	for _, v in Info do
+		if v.IdWorldInteraction == Id and v.EndFunction then 
+			v.EndFunction(Parent, player)
+			
+			break
+		end
+	end
+end
