@@ -1,0 +1,39 @@
+local CreateOBJ = require(script.PromptClickConfig)
+local db = {}
+
+return function (parteAlvo: BasePart, configInteracao: {[string]: any}, categoriaIndex: number, WorldInteraction: any?)
+	local objetoInteracao = configInteracao.UseClick and CreateOBJ.ConfigClick(configInteracao, parteAlvo) or CreateOBJ.ConfigPrompt(configInteracao, parteAlvo)
+	local Id = configInteracao.IdWorldInteraction or 0
+	local visuality = (categoriaIndex ~= 1) and 1 or 0
+	
+	objetoInteracao:SetAttribute("OnlyUI", configInteracao.OnlyUI)
+	objetoInteracao:SetAttribute("Minigame", configInteracao.Minigame)
+
+	if configInteracao.PromptType == "Aproximity" or configInteracao.Minigame then
+	objetoInteracao:SetAttribute("IdWorldInteraction", Id)
+	objetoInteracao:SetAttribute("Visuality", visuality)
+	return
+	end
+print(configInteracao)
+    if WorldInteraction and not configInteracao.OnlyUI and not configInteracao.Minigame then
+	if objetoInteracao:IsA("ClickDetector") then
+		
+		objetoInteracao.MouseClick:Connect(function(player: Player)
+			if db[player] then return end
+			db[player] = true
+			WorldInteraction.Interaction(Id, visuality, objetoInteracao.Parent, player)
+			db[player] = nil
+		end)
+		
+		elseif objetoInteracao:IsA("ProximityPrompt") then
+		
+		objetoInteracao.Triggered:Connect(function(player:Player)
+			print("server trigged")
+			if db[player] then return end
+			db[player] = true
+				WorldInteraction.Interaction(Id, visuality, objetoInteracao.Parent, player)
+			db[player] = nil
+		end)
+	end
+	end
+end
