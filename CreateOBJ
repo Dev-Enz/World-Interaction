@@ -1,0 +1,26 @@
+local BasePrompt = require(script.BasePrompt)()
+local DISTANCE_DEFAULT = 10
+
+local PromptClickConfig = {}
+
+function PromptClickConfig.ConfigPrompt(info: {[string]: any}, parteAlvo: BasePart): ProximityPrompt
+	local promptObject = BasePrompt:Clone()
+
+	promptObject.Style = (info.PromptType == "Aproximity") and Enum.ProximityPromptStyle.Custom or Enum.ProximityPromptStyle.Default
+	promptObject.ActionText = info.PromptType or ""
+	promptObject.ObjectText = parteAlvo.Name 
+	promptObject.MaxActivationDistance = info.DistanceMax or DISTANCE_DEFAULT
+	promptObject.Parent = parteAlvo
+
+	return promptObject
+end
+
+function PromptClickConfig.ConfigClick(info: {[string]: any}, parteAlvo: BasePart): ClickDetector
+	local clickObject = Instance.new("ClickDetector")
+	clickObject.MaxActivationDistance = info.DistanceMax or DISTANCE_DEFAULT
+	clickObject.Parent = parteAlvo
+
+	return clickObject
+end
+
+return table.freeze(PromptClickConfig)
