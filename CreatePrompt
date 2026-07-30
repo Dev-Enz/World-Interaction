@@ -1,0 +1,11 @@
+return function()
+	local PromptInitial = Instance.new("ProximityPrompt")
+	PromptInitial.Parent = script
+	PromptInitial.Enabled = true
+	PromptInitial.RequiresLineOfSight = false
+	PromptInitial.HoldDuration = 1
+	PromptInitial.ClickablePrompt = true
+	PromptInitial.KeyboardKeyCode = Enum.KeyCode.E
+
+	return PromptInitial
+end
